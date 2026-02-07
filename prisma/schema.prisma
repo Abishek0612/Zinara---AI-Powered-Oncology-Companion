@@ -1,0 +1,253 @@
+generator client {
+  provider        = "prisma-client-js"
+
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// USER & PATIENT MODELS
+// ============================================
+model User {
+  id              String    @id @default(cuid())
+  patientId       String    @unique @default(cuid()) 
+  name            String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  hashedPassword  String?   
+  image           String?
+  ipAddress       String?   // Captured at registration
+  onboardingDone  Boolean   @default(false)
+  role            UserRole  @default(PATIENT)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  accounts             Account[]
+  sessions             Session[]
+  onboardingResponses  OnboardingResponse[]
+  medicalProfile       MedicalProfile?
+  reports              Report[]
+  chatSessions         ChatSession[]
+  sideEffectLogs       SideEffectLog[]
+  notifications        Notification[]
+
+  @@index([email])
+  @@index([patientId])
+  @@index([createdAt])
+  @@map("users")
+}
+
+enum UserRole {
+  PATIENT
+  CAREGIVER
+  ADMIN
+}
+
+// ============================================
+// ONBOARDING MODELS
+// ============================================
+model OnboardingQuestion {
+  id            String   @id @default(cuid())
+  stepNumber    Int      // 1, 2, 3
+  questionText  String
+  questionType  String   @default("dropdown") // dropdown, multi-select, text
+  options       Json     // Array of option objects
+  dependsOn     Json?    // Conditional logic: { questionStep: 1, answerValue: "myself" }
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  responses OnboardingResponse[]
+
+  @@unique([stepNumber])
+  @@map("onboarding_questions")
+}
+
+model OnboardingResponse {
+  id          String   @id @default(cuid())
+  userId      String
+  questionId  String
+  stepNumber  Int
+  answer      String   
+  metadata    Json?    
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question OnboardingQuestion  @relation(fields: [questionId], references: [id])
+
+  @@unique([userId, stepNumber]) 
+  @@index([userId])
+  @@index([questionId])
+  @@map("onboarding_responses")
+}
+
+// ============================================
+// MEDICAL PROFILE
+// ============================================
+model MedicalProfile {
+  id                String       @id @default(cuid())
+  userId            String       @unique
+  cancerType        String?
+  cancerStage       String?
+  currentTreatment  String?
+  diagnosisDate     DateTime?
+  accessingFor      AccessingFor @default(SELF)
+  interests         Json?        
+  additionalNotes   String?      @db.Text
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([cancerType])
+  @@map("medical_profiles")
+}
+
+enum AccessingFor {
+  SELF
+  LOVED_ONE
+  OTHER
+}
+
+// ============================================
+// REPORTS & AI ANALYSIS
+// ============================================
+model Report {
+  id           String       @id @default(cuid())
+  userId       String
+  fileName     String
+  fileUrl      String
+  fileType     String       
+  aiAnalysis   Json?        // Gemini analysis result
+  analysisStatus ReportStatus @default(PENDING)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("reports")
+}
+
+enum ReportStatus {
+  PENDING
+  ANALYZING
+  COMPLETED
+  FAILED
+}
+
+// ============================================
+// AI CHAT
+// ============================================
+model ChatSession {
+  id        String        @id @default(cuid())
+  userId    String
+  title     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id            String   @id @default(cuid())
+  sessionId     String
+  role          String   
+  content       String   @db.Text
+  createdAt     DateTime @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+// ============================================
+// SIDE EFFECTS TRACKER
+// ============================================
+model SideEffectLog {
+  id          String   @id @default(cuid())
+  userId      String
+  symptom     String
+  severity    Int      // 1-10
+  notes       String?  @db.Text
+  loggedAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([loggedAt])
+  @@map("side_effect_logs")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  type      String   @default("general") // general, treatment, report, reminder
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}

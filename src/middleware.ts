@@ -1,0 +1,59 @@
+import { NextResponse } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
+
+const { auth } = NextAuth(authConfig);
+
+const publicPaths = ["/", "/login", "/register", "/api/auth"];
+const onboardingPaths = ["/question"];
+
+export default auth((req) => {
+    const { pathname } = req.nextUrl;
+    const isLoggedIn = !!req.auth;
+    const onboardingDone = req.auth?.user?.onboardingDone;
+
+    // Allow public paths
+    if (publicPaths.some((path) => pathname.startsWith(path))) {
+        // Redirect logged-in users away from login/register
+        if (isLoggedIn && (pathname === "/login" || pathname === "/register")) {
+            if (!onboardingDone) {
+                return NextResponse.redirect(new URL("/question/1", req.url));
+            }
+            return NextResponse.redirect(new URL("/treatment-plans", req.url));
+        }
+        return NextResponse.next();
+    }
+
+    // Redirect unauthenticated users to login
+    if (!isLoggedIn) {
+        const callbackUrl = encodeURIComponent(pathname);
+        return NextResponse.redirect(
+            new URL(`/login?callbackUrl=${callbackUrl}`, req.url)
+        );
+    }
+
+    // Redirect to onboarding if not completed
+    if (
+        !onboardingDone &&
+        !onboardingPaths.some((path) => pathname.startsWith(path)) &&
+        !pathname.startsWith("/api")
+    ) {
+        return NextResponse.redirect(new URL("/question/1", req.url));
+    }
+
+    // Track IP on API calls
+    const response = NextResponse.next();
+    // Safety check for headers
+    const headers = req.headers;
+    const ip =
+        headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        headers.get("x-real-ip") ||
+        "unknown";
+    response.headers.set("x-client-ip", ip);
+
+    return response;
+});
+
+export const config = {
+    matcher: ["/((?!_next/static|_next/image|favicon.ico|public).*)"],
+};
