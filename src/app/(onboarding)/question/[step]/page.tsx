@@ -235,38 +235,18 @@ const transformLabel = (label: string): string => {
             <p className="mb-2 text-xs font-medium text-teal-400">
               🎥 Watch Live
             </p>
-            <p className="text-sm text-gray-400 mb-3">
-              Understanding your journey with Zinara
+            <p className="mb-3 text-sm text-gray-400">
+              How Zinara can personalize your care
             </p>
-            <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-gray-900 shadow-lg group cursor-pointer hover:ring-2 hover:ring-teal-500/50 transition-all">
-              {/* Background Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
-              
-              {/* Play Icon Centered */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-teal-500/20 text-teal-500 backdrop-blur-sm transition-all group-hover:scale-110 group-hover:bg-teal-500 group-hover:text-white">
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="32" 
-                    height="32" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    className="ml-1"
-                  >
-                    <polygon points="5 3 19 12 5 21 5 3" />
-                  </svg>
-                </div>
-              </div>
-              
-              {/* Text Overlay */}
-              <div className="absolute bottom-4 left-4 right-4">
-                <p className="text-sm font-medium text-white">Introduction to Zinara</p>
-                <p className="text-xs text-gray-400">2:30 • Watch the guide</p>
-              </div>
+            <div className="aspect-video overflow-hidden rounded-lg bg-black">
+              <iframe
+                src="https://www.youtube.com/embed/LEpTTolebqo"
+                title="What is Cancer? - Nucleus Health"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full"
+                loading="lazy"
+              />
             </div>
           </div>
 

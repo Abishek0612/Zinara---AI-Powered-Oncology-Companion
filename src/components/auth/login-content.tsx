@@ -73,6 +73,7 @@ export function LoginContent() {
             placeholder="sanjay@example.com"
             required
             className="mt-1 border-gray-600 bg-gray-700/50 text-white placeholder:text-gray-500"
+            suppressHydrationWarning
           />
         </div>
         <div>
