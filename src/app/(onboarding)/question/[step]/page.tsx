@@ -80,7 +80,6 @@ export default function OnboardingQuestionPage() {
       );
       setPreviousAnswers(prevAnswers);
 
-      // If this step was already answered, pre-fill
       const existing = rData.responses?.find(
         (r: { stepNumber: number }) => r.stepNumber === step
       );

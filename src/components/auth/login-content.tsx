@@ -61,7 +61,7 @@ export function LoginContent() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+        <div suppressHydrationWarning>
           <Label htmlFor="email" className="text-gray-300">
             Email
           </Label>
