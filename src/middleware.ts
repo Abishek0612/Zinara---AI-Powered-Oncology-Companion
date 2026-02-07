@@ -4,18 +4,23 @@ import { authConfig } from "@/lib/auth.config";
 
 const { auth } = NextAuth(authConfig);
 
-const publicPaths = ["/", "/login", "/register", "/api/auth"];
 const onboardingPaths = ["/question"];
 
 export default auth((req) => {
     const { pathname } = req.nextUrl;
     const isLoggedIn = !!req.auth;
-    const onboardingDone = req.auth?.user?.onboardingDone;
+    const session = req.auth as any;
+    const onboardingDone = session?.user?.onboardingDone || session?.onboardingDone;
 
-    // Allow public paths
-    if (publicPaths.some((path) => pathname.startsWith(path))) {
+
+    const isPublic = pathname === "/" ||
+        pathname.startsWith("/login") ||
+        pathname.startsWith("/register") ||
+        pathname.startsWith("/api/auth");
+
+    if (isPublic) {
         // Redirect logged-in users away from login/register
-        if (isLoggedIn && (pathname === "/login" || pathname === "/register")) {
+        if (isLoggedIn && (pathname.startsWith("/login") || pathname.startsWith("/register"))) {
             if (!onboardingDone) {
                 return NextResponse.redirect(new URL("/question/1", req.url));
             }

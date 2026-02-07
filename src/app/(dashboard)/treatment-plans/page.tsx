@@ -9,7 +9,18 @@ export default async function TreatmentPlansPage() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/login");
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center">
+        <h2 className="text-xl font-bold text-gray-900">Session Error</h2>
+        <p className="mt-2 text-gray-600">Please verify your session.</p>
+        <a 
+          href="/login" 
+          className="mt-4 rounded-lg bg-teal-500 px-6 py-2 text-white hover:bg-teal-600"
+        >
+          Login Again
+        </a>
+      </div>
+    );
   }
 
   // Fetch data on the server
@@ -26,7 +37,7 @@ export default async function TreatmentPlansPage() {
     } else {
       const cacheKey = `treatment:${profile.cancerType}:${profile.cancerStage || "unknown"}`;
       
-      // Use Redis caching for performance (same logic as API route)
+      // Use Redis caching for performance 
       treatmentInfo = await getCachedData(
         cacheKey,
         () =>

@@ -49,6 +49,27 @@ IMPORTANT GUIDELINES:
 - Use clear, accessible language while being medically accurate.
 - When discussing treatment options, always mention to discuss with their healthcare team.`;
 
+
+function handleGeminiError(error: unknown, context: string): string {
+    console.error(`❌ Gemini API Error (${context}):`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("rate limit")) {
+        return `### Service Notice: High Demand
+        
+The AI assistant is currently experiencing high request volume (Rate Limit Exceeded). 
+
+**Please wait a minute before trying again.**
+
+In the meantime, reliable sources for information include:
+*   [National Cancer Institute](https://www.cancer.gov)
+*   [American Cancer Society](https://www.cancer.org)
+
+*Note: This is a limitation of the free tier API.*`;
+    }
+    throw error;
+}
+
 export async function chatWithGemini(
     messages: { role: string; content: string }[],
     patientContext?: {
@@ -92,34 +113,7 @@ export async function chatWithGemini(
         const result = await chat.sendMessage(lastMessage.content);
         return result.response.text();
     } catch (error) {
-        console.error("❌ Gemini API Error:", error);
-
-        const errorMessage = error instanceof Error ? error.message : String(error);
-
-        if (errorMessage.includes("429") || errorMessage.includes("quota") || errorMessage.includes("rate limit")) {
-            return `Thank you for your question about: "${messages[messages.length - 1].content}"
-
-**Note:** The AI service has reached its usage limit. This happens with free-tier API keys.
-
-**What you can do:**
-1. **Wait a few minutes** - Free tier quotas reset periodically
-2. **Upgrade your API key** - Get higher limits at [Google AI Studio](https://ai.google.dev/pricing)
-3. **Use a different API key** - Create a new one at [Google AI Studio](https://makersuite.google.com/app/apikey)
-
-**In the meantime, here are helpful resources:**
-
-For **treatment information**:
-- National Cancer Institute: cancer.gov
-- American Cancer Society: cancer.org
-
-For **side effect management**, consult your healthcare provider about available medications and support.
-
-For **clinical trials**: Visit ClinicalTrials.gov
-
-**Important:** Always discuss treatment decisions with your oncology team.`;
-        }
-
-        throw error;
+        return handleGeminiError(error, "chatWithGemini");
     }
 }
 
@@ -145,8 +139,12 @@ ${reportText}
 
 IMPORTANT: Remind the patient this is AI-assisted analysis and should be reviewed with their oncologist.`;
 
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    try {
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+    } catch (error) {
+        return handleGeminiError(error, "analyzeReport");
+    }
 }
 
 export async function getDietRecommendations(
@@ -172,8 +170,12 @@ Structure your response as:
 
 Always emphasize consulting with their healthcare team before making dietary changes.`;
 
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    try {
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+    } catch (error) {
+        return handleGeminiError(error, "getDietRecommendations");
+    }
 }
 
 export async function getTreatmentInfo(
@@ -199,6 +201,10 @@ Structure your response as:
 
 CRITICAL: Emphasize that treatment decisions should always be made with their oncology team.`;
 
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    try {
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+    } catch (error) {
+        return handleGeminiError(error, "getTreatmentInfo");
+    }
 }

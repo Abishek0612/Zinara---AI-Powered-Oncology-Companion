@@ -15,10 +15,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            allowDangerousEmailAccountLinking: true,
         }),
         FacebookProvider({
             clientId: process.env.FACEBOOK_CLIENT_ID!,
             clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+            allowDangerousEmailAccountLinking: true,
             authorization: {
                 params: {
                     scope: "email,public_profile",
@@ -69,9 +71,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         ...authConfig.callbacks,
         async jwt({ token, user, trigger, session }) {
-            if (user) {
+            const email = user?.email || token.email;
+            if (email) {
                 const dbUser = await prisma.user.findUnique({
-                    where: { email: user.email! },
+                    where: { email: email },
                     select: {
                         id: true,
                         patientId: true,

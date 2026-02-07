@@ -17,7 +17,18 @@ export default async function DashboardPage() {
   const session = await auth();
   
   if (!session?.user) {
-    redirect("/login");
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center">
+        <h2 className="text-xl font-bold text-gray-900">Session Expired</h2>
+        <p className="mt-2 text-gray-600">Please log in to verify your identity.</p>
+        <Link 
+          href="/login" 
+          className="mt-4 rounded-lg bg-teal-500 px-6 py-2 text-white hover:bg-teal-600"
+        >
+          Return to Login
+        </Link>
+      </div>
+    );
   }
 
   const profile = await prisma.medicalProfile.findUnique({

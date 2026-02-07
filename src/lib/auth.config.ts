@@ -13,7 +13,7 @@ export const authConfig = {
 
             if (isOnDashboard || isOnOnboarding) {
                 if (isLoggedIn) return true;
-                return false; // Redirect unauthenticated users to login page
+                return false;
             }
             return true;
         },
@@ -21,11 +21,16 @@ export const authConfig = {
             if (token.sub && session.user) {
                 session.user.id = token.sub;
             }
+            if (token && session.user) {
+                session.user.onboardingDone = token.onboardingDone as boolean;
+                session.user.role = token.role as string;
+                session.user.patientId = token.patientId as string;
+            }
             return session;
         },
         async jwt({ token }) {
             return token;
         }
     },
-    providers: [], // Providers configured in auth.ts to avoid Node.js/Edge issues
+    providers: [],
 } satisfies NextAuthConfig;

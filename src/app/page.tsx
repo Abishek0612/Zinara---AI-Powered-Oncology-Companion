@@ -4,10 +4,7 @@ import { redirect } from "next/navigation";
 
 export default async function LandingPage() {
   const session = await auth();
-  if (session?.user) {
-    if (!session.user.onboardingDone) redirect("/question/1");
-    redirect("/treatment-plans"); 
-  }
+
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900">
@@ -48,18 +45,37 @@ export default async function LandingPage() {
           required when every second counts.
         </p>
         <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-          <Link
-            href="/register"
-            className="rounded-xl bg-teal-500 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-teal-500/25 transition hover:bg-teal-600 hover:shadow-teal-500/40"
-          >
-            Start Your Journey
-          </Link>
-          <Link
-            href="/login"
-            className="rounded-xl border border-gray-600 px-8 py-3.5 text-base font-semibold text-gray-300 transition hover:border-gray-500 hover:text-white"
-          >
-            Sign In
-          </Link>
+          {session?.user ? (
+            <>
+              <Link
+                href="/treatment-plans"
+                className="rounded-xl bg-teal-500 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-teal-500/25 transition hover:bg-teal-600 hover:shadow-teal-500/40"
+              >
+                Go to Dashboard
+              </Link>
+              <Link
+                href="/api/auth/signout"
+                className="rounded-xl border border-gray-600 px-8 py-3.5 text-base font-semibold text-gray-300 transition hover:border-gray-500 hover:text-white"
+              >
+                Sign Out
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/register"
+                className="rounded-xl bg-teal-500 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-teal-500/25 transition hover:bg-teal-600 hover:shadow-teal-500/40"
+              >
+                Start Your Journey
+              </Link>
+              <Link
+                href="/login"
+                className="rounded-xl border border-gray-600 px-8 py-3.5 text-base font-semibold text-gray-300 transition hover:border-gray-500 hover:text-white"
+              >
+                Sign In
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
