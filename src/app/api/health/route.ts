@@ -13,8 +13,12 @@ export async function GET() {
     }
 
     try {
-        await redis.ping();
-        checks.redis = "healthy";
+        if (redis) {
+            await redis.ping();
+            checks.redis = "healthy";
+        } else {
+            checks.redis = "unconfigured";
+        }
     } catch {
         checks.redis = "unhealthy";
     }
