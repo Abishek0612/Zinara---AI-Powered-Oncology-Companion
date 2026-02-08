@@ -8,13 +8,14 @@ const onboardingPaths = ["/question"];
 
 export default auth((req) => {
     const { pathname } = req.nextUrl;
-    const isLoggedIn = !!req.auth;
     const session = req.auth as any;
-    const onboardingDone = session?.user?.onboardingDone || session?.onboardingDone;
+    const isLoggedIn = !!session;
+    const onboardingDone = session?.user?.onboardingDone;
 
     const isPublic =
         pathname === "/" ||
         pathname.startsWith("/login") ||
+
         pathname.startsWith("/register") ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/health") ||
@@ -23,7 +24,7 @@ export default auth((req) => {
     if (isPublic) {
         // Redirect logged-in users away from login/register
         if (isLoggedIn && (pathname.startsWith("/login") || pathname.startsWith("/register"))) {
-            if (!onboardingDone) {
+            if (onboardingDone === false) {
                 return NextResponse.redirect(new URL("/question/1", req.url));
             }
             return NextResponse.redirect(new URL("/treatment-plans", req.url));
@@ -39,14 +40,25 @@ export default auth((req) => {
         );
     }
 
+
     // Redirect to onboarding if not completed
     if (
-        !onboardingDone &&
+        onboardingDone === false &&
         !onboardingPaths.some((path) => pathname.startsWith(path)) &&
         !pathname.startsWith("/api")
     ) {
         return NextResponse.redirect(new URL("/question/1", req.url));
     }
+
+    // Redirect to dashboard if onboarding is already completed but trying to access onboarding pages
+    if (
+        onboardingDone === true &&
+        onboardingPaths.some((path) => pathname.startsWith(path))
+    ) {
+        return NextResponse.redirect(new URL("/treatment-plans", req.url));
+    }
+
+
 
     // Track IP on API calls
     const response = NextResponse.next();

@@ -56,12 +56,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 }
 
                 return {
+
                     id: user.id,
                     email: user.email,
                     name: user.name,
                     image: user.image,
+                    onboardingDone: user.onboardingDone,
+                    role: user.role,
+                    patientId: user.patientId,
                 };
             },
+
         }),
     ],
     session: {
@@ -71,32 +76,52 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         ...authConfig.callbacks,
         async jwt({ token, user, trigger, session }) {
-            const email = user?.email || token.email;
-            if (email) {
-                const dbUser = await prisma.user.findUnique({
-                    where: { email: email },
-                    select: {
-                        id: true,
-                        patientId: true,
-                        onboardingDone: true,
-                        role: true,
-                    },
-                });
-                if (dbUser) {
-                    token.userId = dbUser.id;
-                    token.patientId = dbUser.patientId;
-                    token.onboardingDone = dbUser.onboardingDone;
-                    token.role = dbUser.role;
+            if (user) {
+                token.id = user.id;
+                token.userId = user.id;
+                const u = user as any;
+                if (typeof u.onboardingDone === 'boolean') {
+                    token.onboardingDone = u.onboardingDone;
+                }
+                if (u.patientId) token.patientId = u.patientId;
+                if (u.role) token.role = u.role;
+            }
+
+            // Handle updates
+            if (trigger === "update" && session) {
+                if (typeof session.onboardingDone === 'boolean') {
+                    token.onboardingDone = session.onboardingDone;
                 }
             }
-            if (trigger === "update" && session) {
-                token.onboardingDone = session.onboardingDone;
+
+            const email = user?.email || token.email;
+            if (email) {
+                try {
+                    const dbUser = await prisma.user.findUnique({
+                        where: { email: email },
+                        select: {
+                            id: true,
+                            patientId: true,
+                            onboardingDone: true,
+                            role: true,
+                        },
+                    });
+                    if (dbUser) {
+                        token.userId = dbUser.id;
+                        token.patientId = dbUser.patientId;
+                        token.onboardingDone = dbUser.onboardingDone;
+                        token.role = dbUser.role;
+                    }
+                } catch (error) {
+                    console.error("Error refreshing token from DB:", error);
+                }
             }
+
             return token;
         },
         async session({ session, token }) {
             if (token) {
-                session.user.id = token.userId as string;
+                session.user.id = token.userId as string || token.sub as string;
                 session.user.patientId = token.patientId as string;
                 session.user.onboardingDone = token.onboardingDone as boolean;
                 session.user.role = token.role as string;

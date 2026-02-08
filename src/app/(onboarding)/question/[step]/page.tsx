@@ -52,7 +52,9 @@ export default function OnboardingQuestionPage() {
     }
   }, [session, router]);
 
+
   const [question, setQuestion] = useState<QuestionData | null>(null);
+
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [metadata, setMetadata] = useState<Record<string, string>>({});
   const [showPopup, setShowPopup] = useState(false);

@@ -31,15 +31,16 @@ export async function POST(req: Request) {
                 email,
                 hashedPassword,
                 role: "PATIENT",
-                onboardingDone: false, // Explicitly false for new users
-                patientId: `ZNR-${Math.random().toString(36).substr(2, 9).toUpperCase()}`, // Generate simple ID
+                onboardingDone: false,
+                patientId: `ZNR-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
             },
         });
 
-        // Remove password from response
         const { hashedPassword: _, ...userWithoutPassword } = user;
 
         return NextResponse.json(userWithoutPassword);
+
+
     } catch (error) {
         if (error instanceof z.ZodError) {
             return new NextResponse("Invalid request data", { status: 422 });

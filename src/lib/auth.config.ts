@@ -5,7 +5,11 @@ export const authConfig = {
         signIn: "/login",
         error: "/auth/error",
     },
+    session: {
+        strategy: "jwt",
+    },
     callbacks: {
+
         authorized({ auth, request: nextUrl }) {
             const isLoggedIn = !!auth?.user;
             const isOnDashboard = nextUrl.nextUrl.pathname.startsWith("/dashboard");
@@ -28,6 +32,7 @@ export const authConfig = {
             }
             return session;
         },
+
         async jwt({ token }) {
             return token;
         }
