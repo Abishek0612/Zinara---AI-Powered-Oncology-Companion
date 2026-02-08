@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { SignOutButton } from "@/components/auth/sign-out-button";
+
 
 export default async function LandingPage() {
   const session = await auth();
@@ -53,12 +55,12 @@ export default async function LandingPage() {
               >
                 Go to Dashboard
               </Link>
-              <Link
-                href="/api/auth/signout"
+              <SignOutButton
                 className="rounded-xl border border-gray-600 px-8 py-3.5 text-base font-semibold text-gray-300 transition hover:border-gray-500 hover:text-white"
               >
                 Sign Out
-              </Link>
+              </SignOutButton>
+
             </>
           ) : (
             <>
