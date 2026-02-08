@@ -12,11 +12,13 @@ export default auth((req) => {
     const session = req.auth as any;
     const onboardingDone = session?.user?.onboardingDone || session?.onboardingDone;
 
-
-    const isPublic = pathname === "/" ||
+    const isPublic =
+        pathname === "/" ||
         pathname.startsWith("/login") ||
         pathname.startsWith("/register") ||
-        pathname.startsWith("/api/auth");
+        pathname.startsWith("/api/auth") ||
+        pathname.startsWith("/api/health") ||
+        (pathname === "/api/patients" && req.method === "POST");
 
     if (isPublic) {
         // Redirect logged-in users away from login/register
@@ -48,7 +50,6 @@ export default auth((req) => {
 
     // Track IP on API calls
     const response = NextResponse.next();
-    // Safety check for headers
     const headers = req.headers;
     const ip =
         headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
