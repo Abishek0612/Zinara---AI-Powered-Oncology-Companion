@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import { headers } from "next/headers";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";
@@ -133,10 +134,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         async signIn({ user }) {
             if (user.id) {
                 try {
+                    const headerList = await headers();
+                    const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+
                     await prisma.user.update({
                         where: { id: user.id },
                         data: {
-                            ipAddress: "captured-at-middleware",
+                            ipAddress: ip,
                         },
                     });
                 } catch (e) {
